@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BGM Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fff;
+            font-size: 24px;
+        }
+
+        .player-section {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .video-toggle {
+            background: #363636;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .video-toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .video-toggle label {
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        #player {
+            width: 100%;
+            height: 150px;
+            background: #000;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        #player.visible {
+            display: block;
+        }
+
+        .progress-control {
+            background: #363636;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 30px;
+            background: #555;
+            border-radius: 15px;
+            position: relative;
+            cursor: pointer;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #0066cc, #0099ff);
+            border-radius: 15px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+            font-weight: 600;
+            color: #e0e0e0;
+        }
+
+        .time-current {
+            color: #0066cc;
+        }
+
+        .time-total {
+            color: #aaa;
+        }
+
+        .loop-toggle {
+            background: #363636;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .loop-toggle input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .loop-toggle label {
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .loop-control {
+            background: #363636;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .loop-control.visible {
+            display: flex;
+        }
+
+        .loop-control input[type="text"] {
+            width: 60px;
+            padding: 6px;
+            background: #2a2a2a;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #e0e0e0;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .loop-control label {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .loop-control button {
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+
+        .volume-control {
+            background: #363636;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .volume-control label {
+            font-size: 14px;
+            font-weight: 600;
+            min-width: 80px;
+            color: #fff;
+        }
+
+        .volume-slider {
+            flex: 1;
+            height: 40px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(to right, #0066cc 0%, #0066cc 100%, #555 100%);
+            border-radius: 20px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border: 4px solid #0066cc;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 50px;
+            height: 50px;
+            background: #fff;
+            border: 4px solid #0066cc;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .volume-value {
+            font-size: 24px;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+            color: #0066cc;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #0052a3;
+        }
+
+        button.active {
+            background: #00cc66;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+        }
+
+        .now-playing {
+            background: #363636;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .category-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .category-selector select {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px;
+            background: #363636;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 13px;
+        }
+
+        .playlists-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .playlists-container.cols-1 {
+            grid-template-columns: 1fr;
+        }
+
+        .playlists-container.cols-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .playlists-container.cols-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .playlists-container.cols-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .playlist {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+
+        .playlist h2 {
+            margin-bottom: 12px;
+            color: #fff;
+            font-size: 16px;
+            position: sticky;
+            top: 0;
+            background: #2a2a2a;
+            padding-bottom: 8px;
+            z-index: 1;
+        }
+
+        .song-item {
+            background: #363636;
+            padding: 10px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+
+        .song-item:hover {
+            background: #404040;
+        }
+
+        .song-item.playing {
+            background: #0066cc;
+        }
+
+        .song-title {
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .song-meta {
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        @media (max-width: 1200px) {
+            .playlists-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .playlists-container {
+                grid-template-columns: 1fr;
+            }
+            
+            #player {
+                height: 120px;
+            }
+
+            .volume-slider {
+                height: 35px;
+            }
+
+            .volume-slider::-webkit-slider-thumb {
+                width: 45px;
+                height: 45px;
+            }
+
+            .volume-slider::-moz-range-thumb {
+                width: 45px;
+                height: 45px;
+            }
+
+            .volume-value {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 BGM</h1>
+
+        <div class="player-section">
+            <div class="video-toggle">
+                <input type="checkbox" id="videoToggle" onchange="toggleVideoDisplay()">
+                <label for="videoToggle">📺 영상보기</label>
+            </div>
+            
+            <div id="player"></div>
+            
+            <div class="progress-control">
+                <div class="progress-bar-container" onclick="seekToPosition(event)">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div class="time-display">
+                    <span class="time-current" id="currentTime">0:00</span>
+                    <span class="time-total" id="totalTime">0:00</span>
+                </div>
+            </div>
+
+            <div class="loop-toggle">
+                <input type="checkbox" id="loopToggle" onchange="toggleLoopUI()">
+                <label for="loopToggle">🔁 구간반복</label>
+            </div>
+
+            <div class="loop-control" id="loopControl">
+                <label>🔁 구간반복:</label>
+                <label>시작</label>
+                <input type="text" id="loopStart" placeholder="0:00" maxlength="5">
+                <label>~</label>
+                <label>종료</label>
+                <input type="text" id="loopEnd" placeholder="0:00" maxlength="5">
+                <button id="loopBtn" onclick="toggleLoopSection()">구간반복 시작</button>
+                <button onclick="setCurrentAsLoopStart()">현재→시작</button>
+                <button onclick="setCurrentAsLoopEnd()">현재→종료</button>
+            </div>
+            
+            <div class="volume-control">
+                <label>🔊 음량</label>
+                <input type="range" id="volumeSlider" class="volume-slider" min="0" max="100" value="100" oninput="updateVolume(this.value)">
+                <div class="volume-value" id="volumeValue">100</div>
+            </div>
+            
+            <div class="now-playing" id="nowPlaying">재생 중인 곡이 없습니다</div>
+            
+            <div class="controls">
+                <button id="playPauseBtn" onclick="togglePlayPause()">⏸️ 일시정지</button>
+                <button onclick="stopPlayer()">⏹️ 정지</button>
+                <button id="endingBtn3000" onclick="endingFadeOut(3000)" style="background: #cc0066;">마무리 (3초)</button>
+                <button id="endingBtn5000" onclick="endingFadeOut(5000)" style="background: #cc0066;">마무리 (5초)</button>
+                <button onclick="playPrevious()">⏮ 이전</button>
+                <button onclick="playNext()">⏭ 다음</button>
+                <button id="shuffleBtn" onclick="toggleShuffle()">🔀 랜덤</button>
+                <button id="singleRepeatBtn" onclick="toggleSingleRepeat()">🔂 한곡반복</button>
+                <button id="repeatBtn" onclick="toggleRepeat()">🔁 연속재생</button>
+                <button id="crossfadeBtn" onclick="toggleCrossfade()">🎚️ Fade Out</button>
+                <label style="color: #aaa; font-size: 13px; margin-left: 10px;">
+                    리스트 표시: 
+                    <select id="columnSelect" onchange="updateColumnCount()" style="width: auto; padding: 4px 8px; margin-left: 5px;">
+                        <option value="1">1개</option>
+                        <option value="2">2개</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <div class="category-selector">
+            <select id="categorySelect1" onchange="updatePlaylists()">
+                <option value="">카테고리 1</option>
+            </select>
+            <select id="categorySelect2" onchange="updatePlaylists()">
+                <option value="">카테고리 2</option>
+            </select>
+        </div>
+
+        <div class="playlists-container cols-3" id="playlistsContainer">
+            <div class="playlist" id="playlist1">
+                <h2 id="playlist1Title">카테고리를 선택하세요</h2>
+                <div id="playlist1Content"></div>
+            </div>
+            <div class="playlist" id="playlist2">
+                <h2 id="playlist2Title">카테고리를 선택하세요</h2>
+                <div id="playlist2Content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let config = {
+            "효과": [
+                {
+                    "url": "https://youtu.be/-gDdjMsMznk?si=DdJzT9EHFDOXuhYO",
+                    "title": "냉정과 열정 사이 OST (The Whole Nine Yards)"
+                }
+                
+            ],
+            "BGM": [
+                {
+                    "url": "https://youtu.be/_fh133ZO1AE?si=u5xeoh1MEL4tDwrz",
+                    "title": "Vince Guaraldi Trio - O Tannenbaum (5:05)"
+                },
+                {
+                    "url": "https://youtu.be/tEm9EyEPMYM?si=YuVBflGaxqXUnmzP",
+                    "title": "Jingle bell rock"
+                },
+                {
+                    "url": "https://youtu.be/fBUQSyzHOss?si=L24_sFmYmkve0BlM",
+                    "title": "Underneath the Tree"
+                }
+            ]
+        };    
+
+        let player;
+        let currentSong = null;
+        let playlist = [];
+        let currentIndex = 0;
+        let isShuffleMode = false;
+        let isRepeatMode = false;
+        let isSingleRepeatMode = false;
+        let shuffledPlaylist = [];
+        let isPlaying = false;
+        let currentCategory = null;
+        let isCrossfadeMode = false;
+        let fadeOutInterval = null;
+        let isEndingFadeOut = false;
+        let progressUpdateInterval = null;
+        let isLoopSectionMode = false;
+        let loopStartTime = 0;
+        let loopEndTime = 0;
+        let loopCheckInterval = null;
+
+        let tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        let firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                height: '150',
+                width: '100%',
+                videoId: '',
+                playerVars: {
+                    'controls': 1,
+                    'modestbranding': 1,
+                    'rel': 0
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            updateCategorySelectors();
+            updatePlaylists();
+            updateColumnCount();
+            startProgressUpdate();
+        }
+
+        function onPlayerStateChange(event) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                isPlaying = true;
+                updatePlayPauseButton();
+                startProgressUpdate();
+            } else if (event.data === YT.PlayerState.PAUSED) {
+                isPlaying = false;
+                updatePlayPauseButton();
+            } else if (event.data === YT.PlayerState.ENDED) {
+                isPlaying = false;
+                updatePlayPauseButton();
+                
+                if (isSingleRepeatMode && currentSong) {
+                    const videoId = extractVideoId(currentSong.url);
+                    if (videoId && player) {
+                        player.loadVideoById(videoId);
+                    }
+                } else if (isRepeatMode) {
+                    playNext();
+                }
+            }
+        }
+
+        function toggleVideoDisplay() {
+            const videoToggle = document.getElementById('videoToggle');
+            const playerDiv = document.getElementById('player');
+            
+            if (videoToggle.checked) {
+                playerDiv.classList.add('visible');
+            } else {
+                playerDiv.classList.remove('visible');
+            }
+        }
+
+        function toggleLoopUI() {
+            const loopToggle = document.getElementById('loopToggle');
+            const loopControl = document.getElementById('loopControl');
+            
+            if (loopToggle.checked) {
+                loopControl.classList.add('visible');
+            } else {
+                loopControl.classList.remove('visible');
+                // 체크 해제 시 구간반복도 중지
+                if (isLoopSectionMode) {
+                    toggleLoopSection();
+                }
+            }
+        }
+
+        function startProgressUpdate() {
+            if (progressUpdateInterval) {
+                clearInterval(progressUpdateInterval);
+            }
+            
+            progressUpdateInterval = setInterval(() => {
+                if (player && player.getCurrentTime && player.getDuration) {
+                    try {
+                        const currentTime = player.getCurrentTime();
+                        const duration = player.getDuration();
+                        
+                        if (duration > 0) {
+                            const percentage = (currentTime / duration) * 100;
+                            document.getElementById('progressBar').style.width = percentage + '%';
+                            document.getElementById('currentTime').textContent = formatTime(currentTime);
+                            document.getElementById('totalTime').textContent = formatTime(duration);
+                        }
+                    } catch (e) {
+                        // 에러 무시
+                    }
+                }
+            }, 500);
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return mins + ':' + (secs < 10 ? '0' : '') + secs;
+        }
+
+        function parseTimeToSeconds(timeStr) {
+            const parts = timeStr.split(':');
+            if (parts.length !== 2) return 0;
+            const mins = parseInt(parts[0]) || 0;
+            const secs = parseInt(parts[1]) || 0;
+            return mins * 60 + secs;
+        }
+
+        function toggleLoopSection() {
+            isLoopSectionMode = !isLoopSectionMode;
+            const loopBtn = document.getElementById('loopBtn');
+            
+            if (isLoopSectionMode) {
+                const startStr = document.getElementById('loopStart').value;
+                const endStr = document.getElementById('loopEnd').value;
+                
+                loopStartTime = parseTimeToSeconds(startStr);
+                loopEndTime = parseTimeToSeconds(endStr);
+                
+                if (loopEndTime <= loopStartTime) {
+                    alert('종료 시간이 시작 시간보다 커야 합니다.');
+                    isLoopSectionMode = false;
+                    return;
+                }
+                
+                loopBtn.textContent = '구간반복 중지';
+                loopBtn.classList.add('active');
+                
+                // 시작 위치로 이동
+                if (player && player.seekTo) {
+                    player.seekTo(loopStartTime, true);
+                }
+                
+                // 구간 체크 시작
+                startLoopCheck();
+            } else {
+                loopBtn.textContent = '구간반복 시작';
+                loopBtn.classList.remove('active');
+                stopLoopCheck();
+            }
+        }
+
+        function startLoopCheck() {
+            if (loopCheckInterval) {
+                clearInterval(loopCheckInterval);
+            }
+            
+            loopCheckInterval = setInterval(() => {
+                if (player && player.getCurrentTime && isLoopSectionMode) {
+                    const currentTime = player.getCurrentTime();
+                    
+                    // 종료 시간을 넘어가면 시작 위치로 이동
+                    if (currentTime >= loopEndTime) {
+                        player.seekTo(loopStartTime, true);
+                    }
+                }
+            }, 100); // 0.1초마다 체크 (딜레이 최소화)
+        }
+
+        function stopLoopCheck() {
+            if (loopCheckInterval) {
+                clearInterval(loopCheckInterval);
+                loopCheckInterval = null;
+            }
+        }
+
+        function setCurrentAsLoopStart() {
+            if (player && player.getCurrentTime) {
+                const currentTime = player.getCurrentTime();
+                document.getElementById('loopStart').value = formatTime(currentTime);
+            }
+        }
+
+        function setCurrentAsLoopEnd() {
+            if (player && player.getCurrentTime) {
+                const currentTime = player.getCurrentTime();
+                document.getElementById('loopEnd').value = formatTime(currentTime);
+            }
+        }
+
+        function seekToPosition(event) {
+            if (!player || !player.getDuration || !player.seekTo) return;
+            
+            const container = event.currentTarget;
+            const rect = container.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const percentage = clickX / rect.width;
+            const duration = player.getDuration();
+            
+            if (duration > 0) {
+                const seekTime = duration * percentage;
+                player.seekTo(seekTime, true);
+            }
+        }
+
+        function togglePlayPause() {
+            if (!player || !player.getPlayerState) return;
+            
+            const state = player.getPlayerState();
+            if (state === YT.PlayerState.PLAYING) {
+                // 재생 중일 때만 Fade Out 적용
+                if (isCrossfadeMode && isPlaying) {
+                    fadeOutAndPause();
+                } else {
+                    player.pauseVideo();
+                }
+            } else {
+                player.playVideo();
+            }
+        }
+
+
+        function fadeOutAndPause() {
+            const originalVolume = player.getVolume();
+            let currentVolume = originalVolume;
+            
+            if (fadeOutInterval) {
+                clearInterval(fadeOutInterval);
+            }
+            
+            fadeOutInterval = setInterval(() => {
+                currentVolume -= 5;
+                if (currentVolume <= 0) {
+                    clearInterval(fadeOutInterval);
+                    fadeOutInterval = null;
+                    player.pauseVideo();
+                    player.setVolume(originalVolume);
+                    updateVolumeSlider(originalVolume);
+                } else {
+                    player.setVolume(currentVolume);
+                    updateVolumeSlider(Math.round(currentVolume));
+                }
+            }, 50);
+        }
+
+        function fadeOutAndStop() {
+            const originalVolume = player.getVolume();
+            let currentVolume = originalVolume;
+            
+            if (fadeOutInterval) {
+                clearInterval(fadeOutInterval);
+            }
+            
+            fadeOutInterval = setInterval(() => {
+                currentVolume -= 5;
+                if (currentVolume <= 0) {
+                    clearInterval(fadeOutInterval);
+                    fadeOutInterval = null;
+                    player.stopVideo();
+                    player.setVolume(originalVolume);
+                    updateVolumeSlider(originalVolume);
+                    isPlaying = false;
+                    updatePlayPauseButton();
+                } else {
+                    player.setVolume(currentVolume);
+                    updateVolumeSlider(Math.round(currentVolume));
+                }
+            }, 50);
+        }
+
+        function stopPlayer() {
+            if (!player || !player.stopVideo) return;
+            
+            // 재생 중이고 Crossfade 모드일 때만 Fade Out 적용
+            if (isCrossfadeMode && isPlaying) {
+                fadeOutAndStop();
+            } else {
+                // 기존 Fade Out이 진행 중이면 취소
+                if (fadeOutInterval) {
+                    clearInterval(fadeOutInterval);
+                    fadeOutInterval = null;
+                    const currentVolume = document.getElementById('volumeSlider').value;
+                    if (player.setVolume) {
+                        player.setVolume(currentVolume);
+                    }
+                }
+                
+                player.stopVideo();
+                isPlaying = false;
+                updatePlayPauseButton();
+            }
+        }
+
+        function endingFadeOut(durationSecond) {
+            if (!player || !player.getVolume || !isPlaying) return;
+            
+            if (isEndingFadeOut) return;
+            
+            isEndingFadeOut = true;
+            let endingBtn = document.getElementById('endingBtn' + durationSecond);
+            endingBtn.disabled = true;
+            endingBtn.style.opacity = '0.5';
+            endingBtn.textContent = '🎬 마무리 중...';
+            
+            const originalVolume = player.getVolume();
+            let currentVolume = originalVolume;
+            const steps = 100;
+            const duration = durationSecond;
+            const intervalTime = duration / steps;
+            const volumeDecrement = originalVolume / steps;
+            let _textContent = duration/1000;
+            
+            if (fadeOutInterval) {
+                clearInterval(fadeOutInterval);
+            }
+            
+            fadeOutInterval = setInterval(() => {
+                currentVolume -= volumeDecrement;
+                if (currentVolume <= 0) {
+                    clearInterval(fadeOutInterval);
+                    fadeOutInterval = null;
+                    player.stopVideo();
+                    player.setVolume(originalVolume);
+                    updateVolumeSlider(originalVolume);
+                    isPlaying = false;
+                    isEndingFadeOut = false;
+                    updatePlayPauseButton();
+                    
+                    endingBtn.disabled = false;
+                    endingBtn.style.opacity = '1';
+                    endingBtn.textContent = '🎬 마무리 (' + _textContent +'초)';
+                } else {
+                    player.setVolume(Math.max(0, currentVolume));
+                    updateVolumeSlider(Math.round(currentVolume));
+                }
+            }, intervalTime);
+        }
+
+        function updateVolumeSlider(value) {
+            const slider = document.getElementById('volumeSlider');
+            const valueDisplay = document.getElementById('volumeValue');
+            if (slider && valueDisplay) {
+                slider.value = value;
+                valueDisplay.textContent = value;
+                const percentage = value;
+                slider.style.background = `linear-gradient(to right, #0066cc 0%, #0066cc ${percentage}%, #555 ${percentage}%)`;
+            }
+        }
+
+        function updateVolume(value) {
+            if (player && player.setVolume) {
+                player.setVolume(value);
+            }
+            document.getElementById('volumeValue').textContent = value;
+            
+            const slider = document.getElementById('volumeSlider');
+            const percentage = value;
+            slider.style.background = `linear-gradient(to right, #0066cc 0%, #0066cc ${percentage}%, #555 ${percentage}%)`;
+        }
+
+        function updatePlayPauseButton() {
+            const btn = document.getElementById('playPauseBtn');
+            if (isPlaying) {
+                btn.textContent = '⏸️ 일시정지';
+            } else {
+                btn.textContent = '▶️ 재생';
+            }
+        }
+
+        function extractVideoId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        function playSong(song, categoryName) {
+            const videoId = extractVideoId(song.url);
+            if (!videoId || !player || !player.loadVideoById) return;
+
+            if (isCrossfadeMode && isPlaying && player.getVolume) {
+                const originalVolume = player.getVolume();
+                let currentVolume = originalVolume;
+                
+                if (fadeOutInterval) {
+                    clearInterval(fadeOutInterval);
+                }
+                
+                fadeOutInterval = setInterval(() => {
+                    currentVolume -= 5;
+                    if (currentVolume <= 0) {
+                        clearInterval(fadeOutInterval);
+                        fadeOutInterval = null;
+                        player.setVolume(originalVolume);
+                        updateVolumeSlider(originalVolume);
+                        loadAndPlayNewSong(song, categoryName, videoId);
+                    } else {
+                        player.setVolume(currentVolume);
+                        updateVolumeSlider(Math.round(currentVolume));
+                    }
+                }, 50);
+            } else {
+                loadAndPlayNewSong(song, categoryName, videoId);
+            }
+        }
+
+        function loadAndPlayNewSong(song, categoryName, videoId) {
+            currentSong = { ...song, category: categoryName };
+            currentCategory = categoryName;
+            player.loadVideoById(videoId);
+            isPlaying = true;
+            updateNowPlaying();
+            updatePlayingIndicator();
+            updatePlayPauseButton();
+        }
+
+        function toggleCrossfade() {
+            isCrossfadeMode = !isCrossfadeMode;
+            document.getElementById('crossfadeBtn').classList.toggle('active', isCrossfadeMode);
+        }
+
+        function toggleSingleRepeat() {
+            isSingleRepeatMode = !isSingleRepeatMode;
+            document.getElementById('singleRepeatBtn').classList.toggle('active', isSingleRepeatMode);
+            
+            if (isSingleRepeatMode && isRepeatMode) {
+                isRepeatMode = false;
+                document.getElementById('repeatBtn').classList.remove('active');
+            }
+        }
+
+        function updateNowPlaying() {
+            if (!currentSong) {
+                document.getElementById('nowPlaying').innerHTML = '재생 중인 곡이 없습니다';
+                return;
+            }
+
+            const displayName = currentSong.customName || currentSong.title;
+            const tags = currentSong.tags ? currentSong.tags.join(', ') : '';
+            document.getElementById('nowPlaying').innerHTML = `
+                <strong>재생 중:</strong> ${displayName}<br>
+                ${tags ? `<small>🏷️ ${tags}</small>` : ''}
+                ${currentSong.memo ? `<br><small>📝 ${currentSong.memo}</small>` : ''}
+            `;
+        }
+
+        function updatePlayingIndicator() {
+            document.querySelectorAll('.song-item').forEach(item => {
+                item.classList.remove('playing');
+            });
+            
+            if (currentSong) {
+                const items = document.querySelectorAll(`[data-url="${currentSong.url}"]`);
+                items.forEach(item => item.classList.add('playing'));
+            }
+        }
+
+        function buildPlaylistFromCategories() {
+            playlist = [];
+            const cat1 = document.getElementById('categorySelect1').value;
+            const cat2 = document.getElementById('categorySelect2').value;
+            const cat3 = document.getElementById('categorySelect3').value;
+            const cat4 = document.getElementById('categorySelect4').value;
+            
+            [cat1, cat2, cat3, cat4].forEach((cat, idx) => {
+                if (cat && config[cat]) {
+                    const otherCats = [cat1, cat2, cat3, cat4].filter((c, i) => i !== idx);
+                    if (!otherCats.includes(cat)) {
+                        config[cat].forEach(song => {
+                            playlist.push({ ...song, category: cat });
+                        });
+                    }
+                }
+            });
+            
+            if (isShuffleMode) {
+                shufflePlaylist();
+            }
+        }
+
+        function shufflePlaylist() {
+            if (currentCategory && config[currentCategory]) {
+                shuffledPlaylist = config[currentCategory].map(song => ({
+                    ...song,
+                    category: currentCategory
+                }));
+            } else {
+                shuffledPlaylist = [...playlist];
+            }
+            
+            for (let i = shuffledPlaylist.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledPlaylist[i], shuffledPlaylist[j]] = [shuffledPlaylist[j], shuffledPlaylist[i]];
+            }
+        }
+
+        function getActivePlaylist() {
+            return isShuffleMode ? shuffledPlaylist : playlist;
+        }
+
+        function playNext() {
+            buildPlaylistFromCategories();
+            const activeList = getActivePlaylist();
+            
+            if (activeList.length === 0) return;
+            
+            if (currentSong) {
+                const currentIdx = activeList.findIndex(s => s.url === currentSong.url);
+                currentIndex = currentIdx >= 0 ? (currentIdx + 1) % activeList.length : 0;
+            }
+            
+            playSong(activeList[currentIndex], activeList[currentIndex].category);
+        }
+
+        function playPrevious() {
+            buildPlaylistFromCategories();
+            const activeList = getActivePlaylist();
+            
+            if (activeList.length === 0) return;
+            
+            if (currentSong) {
+                const currentIdx = activeList.findIndex(s => s.url === currentSong.url);
+                currentIndex = currentIdx >= 0 ? (currentIdx - 1 + activeList.length) % activeList.length : 0;
+            }
+            
+            playSong(activeList[currentIndex], activeList[currentIndex].category);
+        }
+
+        function toggleShuffle() {
+            isShuffleMode = !isShuffleMode;
+            document.getElementById('shuffleBtn').classList.toggle('active', isShuffleMode);
+            if (isShuffleMode) {
+                shufflePlaylist();
+            }
+        }
+
+        function toggleRepeat() {
+            isRepeatMode = !isRepeatMode;
+            document.getElementById('repeatBtn').classList.toggle('active', isRepeatMode);
+            
+            if (isRepeatMode && isSingleRepeatMode) {
+                isSingleRepeatMode = false;
+                document.getElementById('singleRepeatBtn').classList.remove('active');
+            }
+        }
+
+        function updateCategorySelectors() {
+            const categories = Object.keys(config);
+            const selects = [
+                document.getElementById('categorySelect1'),
+                document.getElementById('categorySelect2'),
+                document.getElementById('categorySelect3'),
+                document.getElementById('categorySelect4')
+            ];
+            
+            const currentVals = selects.map(s => s.value);
+            
+            selects.forEach((select, idx) => {
+                select.innerHTML = `<option value="">카테고리 ${idx + 1} 선택</option>`;
+                categories.forEach(cat => {
+                    select.innerHTML += `<option value="${cat}" ${cat === currentVals[idx] ? 'selected' : ''}>${cat}</option>`;
+                });
+            });
+        }
+
+        function updatePlaylists() {
+            const cat1 = document.getElementById('categorySelect1').value;
+            const cat2 = document.getElementById('categorySelect2').value;
+            const cat3 = document.getElementById('categorySelect3').value;
+            const cat4 = document.getElementById('categorySelect4').value;
+            
+            updatePlaylist('playlist1', cat1);
+            updatePlaylist('playlist2', cat2);
+            updatePlaylist('playlist3', cat3);
+            updatePlaylist('playlist4', cat4);
+            buildPlaylistFromCategories();
+        }
+
+        function updateColumnCount() {
+            const columnCount = document.getElementById('columnSelect').value;
+            const container = document.getElementById('playlistsContainer');
+            
+            container.className = 'playlists-container cols-' + columnCount;
+            
+            for (let i = 1; i <= 4; i++) {
+                const playlist = document.getElementById('playlist' + i);
+                const select = document.getElementById('categorySelect' + i);
+                
+                if (i <= columnCount) {
+                    playlist.style.display = 'block';
+                    select.style.display = 'block';
+                } else {
+                    playlist.style.display = 'none';
+                    select.style.display = 'none';
+                }
+            }
+        }
+
+        function updatePlaylist(playlistId, categoryName) {
+            const titleEl = document.getElementById(playlistId + 'Title');
+            const contentEl = document.getElementById(playlistId + 'Content');
+            
+            if (!categoryName || !config[categoryName]) {
+                titleEl.textContent = '카테고리를 선택하세요';
+                contentEl.innerHTML = '';
+                return;
+            }
+            
+            titleEl.textContent = `${categoryName} (${config[categoryName].length}곡)`;
+            
+            contentEl.innerHTML = config[categoryName].map(song => {
+                const displayName = song.customName || song.title;
+                const tags = song.tags ? song.tags.join(', ') : '';
+                return `
+                    <div class="song-item" data-url="${song.url}" onclick='playSong(${JSON.stringify(song).replace(/'/g, "&#39;")}, "${categoryName}")'>
+                        <div class="song-title">${displayName}</div>
+                        <div class="song-meta">
+                            ${tags ? `🏷️ ${tags}` : ''}
+                            ${song.memo ? ` | 📝 ${song.memo}` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            updatePlayingIndicator();
+        }
+    </script>
+</body>
+</html>
