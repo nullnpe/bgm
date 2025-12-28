@@ -392,7 +392,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎵 BGM</h1>
+        <h1>🎵 BGM Player</h1>
 
         <div class="player-section">
             <div class="video-toggle">
@@ -452,7 +452,9 @@
                     리스트 표시: 
                     <select id="columnSelect" onchange="updateColumnCount()" style="width: auto; padding: 4px 8px; margin-left: 5px;">
                         <option value="1">1개</option>
-                        <option value="2">2개</option>
+                        <option value="2" selected>2개</option>
+                        <option value="3">3개</option>
+                        <option value="4">4개</option>
                     </select>
                 </label>
             </div>
@@ -465,6 +467,12 @@
             <select id="categorySelect2" onchange="updatePlaylists()">
                 <option value="">카테고리 2</option>
             </select>
+            <select id="categorySelect3" onchange="updatePlaylists()">
+                <option value="">카테고리 3</option>
+            </select>
+            <select id="categorySelect4" onchange="updatePlaylists()">
+                <option value="">카테고리 4</option>
+            </select>
         </div>
 
         <div class="playlists-container cols-3" id="playlistsContainer">
@@ -475,6 +483,14 @@
             <div class="playlist" id="playlist2">
                 <h2 id="playlist2Title">카테고리를 선택하세요</h2>
                 <div id="playlist2Content"></div>
+            </div>
+            <div class="playlist" id="playlist3">
+                <h2 id="playlist3Title">카테고리를 선택하세요</h2>
+                <div id="playlist3Content"></div>
+            </div>
+            <div class="playlist" id="playlist4">
+                <h2 id="playlist4Title">카테고리를 선택하세요</h2>
+                <div id="playlist4Content"></div>
             </div>
         </div>
     </div>
